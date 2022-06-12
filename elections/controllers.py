@@ -53,4 +53,5 @@ def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Can
     return candidate
 
 
-def get_election_detail_serializer_by_location(loaction: Location) -> List[]
+def get_election_detail_serializer_by_location(loaction: Location):
+    pass
