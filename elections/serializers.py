@@ -94,12 +94,14 @@ class VoteInputSerializer(serializers.Serializer):
 
 
 class VotingResultSerializer(serializers.Serializer):
-    candidate: CandidatesSerializer(many=False)
-    vote_count: serializers.IntegerField()
+    candidate = CandidatesSerializer(many=False)
+    vote_count = serializers.IntegerField()
 
 
 class ElectionFullSerializer(serializers.ModelSerializer):
-    vote_results = VotingResultSerializer(many=True, read_only=True)
+    vote_results = serializers.ListField(
+        child=VotingResultSerializer()
+    )
 
     class Meta:
         model = Election
@@ -107,12 +109,13 @@ class ElectionFullSerializer(serializers.ModelSerializer):
 
 
 class ElectionFullSerializerImplementation(serializers.ModelSerializer):
-    vote_results = serializers.SerializerMethodField()
+    vote_results = serializers.SerializerMethodField(read_only=False)
 
     class Meta:
         model = Election
         fields = '__all__'
 
-    def get_candidate_votes(self, obj) -> List[VotingResultSerializer]:
+    def get_vote_results(self, obj):
         candidate_votes = get_candidate_votes_for_election(obj)
-        return [VotingResultSerializer(vote) for vote in candidate_votes]
+        serialized = VotingResultSerializer(candidate_votes, many=True).data
+        return serialized
