@@ -1,6 +1,9 @@
+from typing import List
+
 from rest_framework import serializers
 
 from elections.models import Voter, Election, Location, LocalElection, GlobalElection, Candidate
+from elections.services import get_candidate_votes_for_election
 
 
 class LoginUserInputSerializer(serializers.Serializer):
@@ -96,8 +99,20 @@ class VotingResultSerializer(serializers.Serializer):
 
 
 class ElectionFullSerializer(serializers.ModelSerializer):
-    vote_results = VotingResultSerializer(many=True)
+    vote_results = VotingResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = Election
         fields = '__all__'
+
+
+class ElectionFullSerializerImplementation(serializers.ModelSerializer):
+    vote_results = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Election
+        fields = '__all__'
+
+    def get_candidate_votes(self, obj) -> List[VotingResultSerializer]:
+        candidate_votes = get_candidate_votes_for_election(obj)
+        return [VotingResultSerializer(vote) for vote in candidate_votes]

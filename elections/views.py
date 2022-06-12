@@ -7,11 +7,11 @@ from drf_spectacular.utils import extend_schema
 
 from elections.api_helpers import user_dependent_call
 from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
-    vote_for_candidate, get_election_details_by_user
+    vote_for_candidate, get_election_details_by_user, get_election_detail_serializer_by_location
 from elections.models import Voter, Location
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
-    VoteInputSerializer, CandidatesSerializer
+    VoteInputSerializer, CandidatesSerializer, ElectionFullSerializerImplementation, ElectionFullSerializer
 
 
 class RegisterUserAPI(APIView):
@@ -149,17 +149,14 @@ class ElectionDetailsAPI(APIView):
 
     @extend_schema(
         responses={
-            200: CandidatesSerializer
+            200: ElectionFullSerializer(many=True)
         }
     )
     @user_dependent_call
     def get(self, request, voter: Voter):
-        election_candidate = get_election_details_by_user(election_id, voter)
+        election_results = get_election_detail_serializer_by_location(voter)
         return Response(
-            data={} if not election_candidate
-            else CandidatesSerializer(
-                election_candidate
-            ).data,
-            status=status.HTTP_202_ACCEPTED
+            election_results.data,
+            status=status.HTTP_200_OK
         )
 

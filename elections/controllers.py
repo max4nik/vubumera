@@ -3,6 +3,7 @@ from itertools import chain
 from rest_framework.exceptions import ValidationError
 
 from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
+from elections.serializers import ElectionFullSerializerImplementation
 
 
 def get_elections_by_voter(voter: Voter):
@@ -53,5 +54,6 @@ def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Can
     return candidate
 
 
-def get_election_detail_serializer_by_location(loaction: Location):
-    pass
+def get_election_detail_serializer_by_location(voter: Voter):
+    elections = get_elections_by_voter(voter)
+    return ElectionFullSerializerImplementation(elections, many=True)
