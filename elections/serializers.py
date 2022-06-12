@@ -83,3 +83,21 @@ class MessageSerializer(serializers.Serializer):
 
 class UserIDSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
+
+
+class VoteInputSerializer(serializers.Serializer):
+    election_id = serializers.IntegerField()
+    candidate_id = serializers.IntegerField()
+
+
+class VotingResultSerializer(serializers.Serializer):
+    candidate: CandidatesSerializer(many=False)
+    vote_count: serializers.IntegerField()
+
+
+class ElectionFullSerializer(serializers.ModelSerializer):
+    vote_results = VotingResultSerializer(many=True)
+
+    class Meta:
+        model = Election
+        fields = '__all__'

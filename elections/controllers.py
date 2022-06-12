@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from itertools import chain
 from rest_framework.exceptions import ValidationError
 
-from elections.models import Voter, GlobalElection, LocalElection, Location
+from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
 
 
 def get_elections_by_voter(voter: Voter):
@@ -28,3 +28,29 @@ def create_user_from_data(password: str, **kwargs):
     new_voter.set_password(password)
     new_voter.save()
     return new_voter.id
+
+
+def vote_for_candidate(voter: Voter, candidate_id: int, election_id: int):
+    previous_vote: Vote = Vote.objects.get(voter_id=voter.id, election_id=election_id).first()
+    election: Election = Election.objects.get(id=election_id).first()
+    candidate: Candidate = Candidate.objects.get(id=candidate_id).first()
+    if previous_vote and not election.is_flexible:
+        raise ValidationError(detail='It is impossible to change a vote on this election', code=400)
+    elif previous_vote:
+        previous_vote.candidate = candidate
+        previous_vote.save()
+    else:
+        new_vote = Vote(voter_id=voter.id, candidate_id=candidate_id, election_id=election_id)
+        new_vote.save()
+    return None
+
+
+def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Candidate]:
+    previous_vote: Vote = Vote.objects.get(voter_id=voter.id, election_id=election_id).first()
+    candidate = None
+    if previous_vote:
+        candidate = Candidate.objects.get(id=previous_vote.candidate_id)
+    return candidate
+
+
+def get_election_detail_serializer_by_location(loaction: Location) -> List[]

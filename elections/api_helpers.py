@@ -13,6 +13,7 @@ def user_dependent_call(func):
         try:
             user_id = kwargs['user_id']
             user = Voter.objects.get(id=user_id)
+            kwargs.pop('user_id')
         except KeyError:
             return Response(
                 data={
@@ -20,7 +21,7 @@ def user_dependent_call(func):
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        response = func(*args, voter=user)
+        response = func(*args, voter=user, **kwargs)
         return response
 
     return __wrapped__

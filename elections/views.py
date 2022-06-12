@@ -6,10 +6,12 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from elections.api_helpers import user_dependent_call
-from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter
+from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
+    vote_for_candidate, get_election_details_by_user
 from elections.models import Voter, Location
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
-    VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer
+    VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
+    VoteInputSerializer, CandidatesSerializer
 
 
 class RegisterUserAPI(APIView):
@@ -101,3 +103,63 @@ class LocationsAPI(APIView):
             LocationSerializer(locations, many=True).data,
             status=status.HTTP_200_OK
         )
+
+
+class VotingAPI(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        request=VoteInputSerializer,
+        responses={
+            200: {},
+            400: ValidationError
+        }
+    )
+    @user_dependent_call
+    def post(self, request, voter: Voter):
+        voting_data = VoteInputSerializer(data=request.data)
+        voting_data.is_valid(raise_exception=True)
+        vote_for_candidate(voter, **voting_data.validated_data)
+        return Response(data={}, status=status.HTTP_200_OK)
+
+
+class ElectionsAPI(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={
+            200: CandidatesSerializer
+        }
+    )
+    @user_dependent_call
+    def get(self, request, voter: Voter, election_id: int):
+        election_candidate = get_election_details_by_user(election_id, voter)
+        return Response(
+            data={} if not election_candidate
+            else CandidatesSerializer(
+                election_candidate
+            ).data,
+            status=status.HTTP_202_ACCEPTED
+        )
+
+
+class ElectionDetailsAPI(APIView):
+
+    permission_classes = []
+
+    @extend_schema(
+        responses={
+            200: CandidatesSerializer
+        }
+    )
+    @user_dependent_call
+    def get(self, request, voter: Voter):
+        election_candidate = get_election_details_by_user(election_id, voter)
+        return Response(
+            data={} if not election_candidate
+            else CandidatesSerializer(
+                election_candidate
+            ).data,
+            status=status.HTTP_202_ACCEPTED
+        )
+
