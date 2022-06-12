@@ -10,10 +10,10 @@ def user_dependent_call(func):
 
     @wraps(func)
     def __wrapped__(*args, **kwargs):
-        rq: request.Request = args[0]
-        if 'user_id' in rq.data:
-            user = Voter.objects.get(id=rq.data['user_id']).first()
-        else:
+        try:
+            user_id = kwargs['user_id']
+            user = Voter.objects.get(id=user_id)
+        except KeyError:
             return Response(
                 data={
                     'message': 'No user id provided'

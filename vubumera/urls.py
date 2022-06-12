@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-from elections.views import RegisterUserAPI
+from elections.views import RegisterUserAPI, RetrieveElectionsAPI, LocationsAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/voter', RegisterUserAPI.as_view(), name='user-management'),
-    # path('api/elections', RegisterUserAPI.as_view(), name='user-management')
+    path('api/locations', LocationsAPI.as_view(), name='locations'),
+    path('api/elections/<int:user_id>', RetrieveElectionsAPI.as_view(), name='retrieve-elections')
 ]

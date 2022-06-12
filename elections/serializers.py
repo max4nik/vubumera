@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from elections.models import Voter, Election, Location, LocalElection
+from elections.models import Voter, Election, Location, LocalElection, GlobalElection, Candidate
 
 
 class LoginUserInputSerializer(serializers.Serializer):
@@ -11,8 +11,20 @@ class LoginUserInputSerializer(serializers.Serializer):
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
+        fields = ['region', 'city']
+
+
+class RetrieveElectionsSerializer(serializers.Serializer):
+
+    class Meta:
+        model = Location
         fields = '__all__'
-        exclude = 'id'
+
+
+class CandidatesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = '__all__'
 
 
 class VoterSerializer(serializers.ModelSerializer):
@@ -21,7 +33,7 @@ class VoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Voter
         fields = [
-            'id', 'full_name', 'email', 'password_id', 'birthdate', 'location'
+            'id', 'full_name', 'email', 'passport_id', 'birthdate', 'location'
         ]
 
 
@@ -31,20 +43,38 @@ class VoterRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Voter
         fields = [
-            'id', 'full_name', 'email', 'password_id', 'birthdate', 'password', 'location'
+            'id', 'full_name', 'email', 'passport_id', 'birthdate', 'password', 'location'
         ]
 
 
 class ElectionSerializer(serializers.ModelSerializer):
+    @classmethod
+    def to_representation(cls, instance):
+        if isinstance(instance, LocalElection):
+            return LocalElectionSerializer(instance=instance)
+        elif isinstance(instance, GlobalElection):
+            return GlobalElectionSerializer(instance=instance)
+
     class Meta:
         model = Election
         fields = '__all__'
 
 
+class GlobalElectionSerializer(serializers.ModelSerializer):
+    candidates = CandidatesSerializer(many=True)
+
+    class Meta:
+        model = GlobalElection
+        fields = ['id', 'name', 'description', 'is_flexible', 'start_date', 'end_date', 'candidates']
+
+
 class LocalElectionSerializer(serializers.ModelSerializer):
+    location = LocationSerializer(many=False)
+    candidates = CandidatesSerializer(many=True)
+
     class Meta:
         model = LocalElection
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'is_flexible', 'start_date', 'end_date', 'location', 'candidates']
 
 
 class MessageSerializer(serializers.Serializer):

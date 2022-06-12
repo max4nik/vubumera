@@ -1,4 +1,7 @@
+import json
+
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.db import models
 
 
@@ -16,6 +19,9 @@ class Voter(User):
     birthdate = models.DateTimeField()
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.full_name
+
 
 class Election(models.Model):
     name = models.CharField(max_length=32)
@@ -27,12 +33,17 @@ class Election(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def candidates(self):
+        return Candidate.objects.filter(election=self)
+
+
+class GlobalElection(Election):
+    pass
+
 
 class LocalElection(Election):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
 
 
 class Candidate(models.Model):
