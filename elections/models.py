@@ -12,7 +12,7 @@ class Location(models.Model):
 
 class Voter(User):
     full_name = models.CharField(max_length=64)
-    passport_id = models.CharField(max_length=32)
+    passport_id = models.CharField(max_length=32, unique=True)
     birthdate = models.DateTimeField()
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
 

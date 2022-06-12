@@ -20,7 +20,7 @@ def user_dependent_call(func):
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        response = func(*args, voter=user, **kwargs)
+        response = func(*args, voter=user)
         return response
 
     return __wrapped__

@@ -48,7 +48,7 @@ class LocalElectionSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.Serializer):
-    message = serializers.CharField(max_length=250)
+    description = serializers.CharField(max_length=250)
 
 
 class UserIDSerializer(serializers.Serializer):

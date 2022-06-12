@@ -17,22 +17,6 @@ class RegisterUserAPI(APIView):
     permission_classes = []
 
     @extend_schema(
-        request=LoginUserInputSerializer,
-        responses={
-            200: VoterSerializer,
-            401: ValidationError
-        }
-    )
-    def get(self, request):
-        request_data = LoginUserInputSerializer(data=request.data)
-        request_data.is_valid(raise_exception=True)
-        user = get_user_from_email(**request_data.validated_data)
-        return Response(
-            VoterSerializer(user).data,
-            status=status.HTTP_200_OK
-        )
-
-    @extend_schema(
         request=VoterRegistrationSerializer,
         responses={
             200: UserIDSerializer,
@@ -48,4 +32,28 @@ class RegisterUserAPI(APIView):
                 'user_id': user_id
             }).data,
             status=status.HTTP_200_OK,
+        )
+
+
+class LoginUserAPI(APIView):
+    """
+    User login view
+    """
+
+    permission_classes = []
+
+    @extend_schema(
+        request=LoginUserInputSerializer,
+        responses={
+            200: VoterSerializer,
+            401: ValidationError
+        }
+    )
+    def post(self, request):
+        request_data = LoginUserInputSerializer(data=request.data)
+        request_data.is_valid(raise_exception=True)
+        user = get_user_from_email(**request_data.validated_data)
+        return Response(
+            VoterSerializer(user).data,
+            status=status.HTTP_200_OK
         )
