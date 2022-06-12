@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-from elections.api_helpers import user_dependent_call
+from elections.api_helpers import user_dependent_call, user_election_dependent_call
 from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
     vote_for_candidate, get_election_details_by_user
-from elections.models import Voter, Location
+from elections.models import Voter, Location, Election, Vote
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
     VoteInputSerializer, CandidatesSerializer
@@ -99,6 +99,24 @@ class LocationsAPI(APIView):
     )
     def get(self, request):
         locations = Location.objects.all()
+        return Response(
+            LocationSerializer(locations, many=True).data,
+            status=status.HTTP_200_OK
+        )
+
+
+class StatisticAPI(APIView):
+    @extend_schema(
+        responses={
+            200: LocationSerializer,
+            401: ValidationError
+        }
+    )
+    @user_election_dependent_call
+    def get(self, request, voter: Voter, election: Election):
+        print(voter, election)
+        candidates = Vote.objects.filter(voter=voter, election=election)
+        list_candidates = list(candidates)
         return Response(
             LocationSerializer(locations, many=True).data,
             status=status.HTTP_200_OK
