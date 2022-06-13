@@ -5,6 +5,7 @@ from rest_framework import serializers
 from elections.controllers import get_percents_by_candidate_for_election
 from elections.models import Voter, Election, Location, LocalElection, GlobalElection, Candidate
 
+
 class LoginUserInputSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=145)

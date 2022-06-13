@@ -4,10 +4,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-from elections.api_helpers import user_dependent_call, user_election_dependent_call
+from elections.api_helpers import user_dependent_call, user_election_dependent_call, election_dependent_call
 from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
     vote_for_candidate, get_election_details_by_user
-from elections.models import Voter, Location
+from elections.models import Voter, Location, Election
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
     VoteInputSerializer, CandidatesSerializer, \
@@ -86,6 +86,29 @@ class RetrieveElectionsAPI(APIView):
         elections = get_elections_by_voter(voter)
         return Response(
             [ElectionSerializer.to_representation(election).data for election in elections],
+            status=status.HTTP_200_OK
+        )
+
+
+class GetElection(APIView):
+    """
+    This is a view to get election by id
+    """
+
+    permission_classes = []
+
+    @extend_schema(
+        request=RetrieveElectionsSerializer,
+        responses={
+            200: ElectionSerializer,
+            401: ValidationError
+        }
+    )
+    @election_dependent_call
+    def get(self, request, election: Election):
+        print(election)
+        return Response(
+            ElectionSerializer.to_representation(election).data,
             status=status.HTTP_200_OK
         )
 
