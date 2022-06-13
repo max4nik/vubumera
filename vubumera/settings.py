@@ -27,10 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-CORS_ORIGIN_WHITELIST = [
-    'https://localhost:3000', 'https://localhost:3001'
-]
-
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
