@@ -6,7 +6,7 @@ from drf_spectacular.utils import extend_schema
 
 from elections.api_helpers import user_dependent_call, user_election_dependent_call, election_dependent_call
 from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
-    vote_for_candidate, get_election_details_by_user
+    vote_for_candidate, get_election_details_by_user, unvote_in_election
 from elections.models import Voter, Location, Election
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
@@ -160,6 +160,21 @@ class VotingAPI(APIView):
         voting_data.is_valid(raise_exception=True)
         vote_for_candidate(voter, **voting_data.validated_data)
         return Response(data={}, status=status.HTTP_200_OK)
+
+
+class UnvoteAPI(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={
+            204: {},
+            400: ValidationError
+        }
+    )
+    @user_election_dependent_call
+    def delete(self, request, voter: Voter, election: Election):
+        unvote_in_election(voter, election)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ElectionsAPI(APIView):

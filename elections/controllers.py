@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 
 from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
 
+
 def get_elections_by_voter(voter: Voter):
     local_elections_for_voter: LocalElection = LocalElection.objects.filter(location=voter.location)
     global_elections: GlobalElection = GlobalElection.objects.all()
@@ -48,6 +49,16 @@ def vote_for_candidate(voter: Voter, candidate_id: int, election_id: int):
         new_vote = Vote(voter_id=voter.id, candidate_id=candidate_id, election_id=election_id)
         new_vote.save()
     return None
+
+
+def unvote_in_election(voter: Voter, election: Election):
+    try:
+        previous_vote = Vote.objects.get(voter=voter, election=election)
+    except Vote.DoesNotExist:
+        raise ValidationError(detail='Vote does not exist', code=404)
+    if previous_vote and not election.is_flexible:
+        raise ValidationError(detail='It is impossible to unvote on this election', code=400)
+    previous_vote.delete()
 
 
 def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Candidate]:

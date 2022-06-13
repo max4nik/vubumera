@@ -19,7 +19,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 
 
 from elections.views import RegisterUserAPI, RetrieveElectionsAPI, LocationsAPI, LoginUserAPI, VotingAPI, \
-    ElectionsAPI, StatisticAPI, GetElection
+    ElectionsAPI, StatisticAPI, GetElection, UnvoteAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,5 +33,6 @@ urlpatterns = [
     path('api/elections/<int:election_id>', GetElection.as_view(), name='get-election'),
     path('api/statistics/<int:user_id>', StatisticAPI.as_view(), name='statistics'),
     path('api/vote/<int:user_id>', VotingAPI.as_view(), name='vote'),
+    path('api/unvote/<int:user_id>/election/<int:election_id>', UnvoteAPI.as_view(), name='unvote'),
     path('api/election/details/<int:user_id>/<int:election_id>', ElectionsAPI.as_view(), name='election-details'),
 ]
