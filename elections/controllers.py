@@ -81,12 +81,10 @@ def get_percents_by_candidate_for_election(election: Election):
     votes = Vote.objects.filter(election=election)
     candidates = votes.values_list('candidate')
     candidates_count = len(candidates)
-    candidates = set(candidates)
+    vote_count = votes.count()
 
-    for candidate in candidates:
-        votes_by_candidates = Vote.objects.filter(candidate_id=candidate[0])
-        candidate = votes_by_candidates.first().candidate
-        candidate_counter = votes_by_candidates.count()
+    for vote in votes:
+        candidate = vote.candidate
         index_for_second_list = result[0].index(candidate.full_name)
-        result[1][index_for_second_list] = candidate_counter / candidates_count * 100
+        result[1][index_for_second_list] += 1 / vote_count * 100
     return result
