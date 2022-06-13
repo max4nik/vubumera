@@ -78,7 +78,7 @@ ROOT_URLCONF = 'vubumera.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:8000",
-    "http://localhost:3001/"
+    "http://localhost:3001"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
