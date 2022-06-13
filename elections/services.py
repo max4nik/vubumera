@@ -5,14 +5,27 @@ from typing import List, Tuple, Dict
 from elections.models import Election, Vote, Candidate
 
 
-def get_candidate_votes_for_election(election: Election) -> List[Dict[str, Candidate, str, int]]:
-    votes = Vote.objects.get(election_id=election.id).all()
-    voting_results = []
-    for key, group in groupby(votes, lambda x: x.candidate_id):
-        voting_results.append(
-            dict(
-                candidate=Candidate.objects.get(id=key).first(),
-                vote_count=len(group)
+def get_candidate_votes_for_election(election: Election):
+    try:
+        votes = Vote.objects.filter(election_id=election.id)
+    except Vote.DoesNotExist:
+        votes = []
+    voting_results = defaultdict(int)
+
+    for vote in votes:
+        voting_results[vote.candidate_id] += 1
+
+    all_candidates = Candidate.objects.filter(election_id=election.id).all()
+
+    for cand in all_candidates:
+        if cand.id not in voting_results:
+            voting_results[cand.id] = 0
+
+    final_results = [[], []]
+    for result in voting_results:
+        final_results[0].append(
+                Candidate.objects.get(id=result).full_name
             )
-        )
-    return voting_results
+        final_results[1].append(voting_results[result])
+
+    return final_results

@@ -1,5 +1,6 @@
 from functools import wraps
 
+from django.shortcuts import get_object_or_404
 from rest_framework import status, request
 from rest_framework.response import Response
 
@@ -12,7 +13,7 @@ def user_dependent_call(func):
     def __wrapped__(*args, **kwargs):
         try:
             user_id = kwargs['user_id']
-            user = Voter.objects.get(id=user_id)
+            user = get_object_or_404(Voter, id=user_id)
             kwargs.pop('user_id')
         except KeyError:
             return Response(

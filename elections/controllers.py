@@ -1,8 +1,11 @@
 from typing import Optional, List
 from itertools import chain
+
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
+from elections.serializers import ElectionFullSerializerImplementation
 
 
 def get_elections_by_voter(voter: Voter):
@@ -12,7 +15,7 @@ def get_elections_by_voter(voter: Voter):
 
 
 def get_user_from_email(email: str, password: str) -> Optional[Voter]:
-    suspect: Voter = Voter.objects.get(email=email).first()
+    suspect: Voter = Voter.objects.filter(email=email).first()
     if suspect.check_password(password):
         return suspect
     else:
@@ -31,9 +34,12 @@ def create_user_from_data(password: str, **kwargs):
 
 
 def vote_for_candidate(voter: Voter, candidate_id: int, election_id: int):
-    previous_vote: Vote = Vote.objects.get(voter_id=voter.id, election_id=election_id).first()
-    election: Election = Election.objects.get(id=election_id).first()
-    candidate: Candidate = Candidate.objects.get(id=candidate_id).first()
+    try:
+        previous_vote = Vote.objects.get(voter_id=voter.id, election_id=election_id)
+    except Vote.DoesNotExist:
+        previous_vote = None
+    election: Election = Election.objects.get(id=election_id)
+    candidate: Candidate = Candidate.objects.get(id=candidate_id)
     if previous_vote and not election.is_flexible:
         raise ValidationError(detail='It is impossible to change a vote on this election', code=400)
     elif previous_vote:
@@ -46,12 +52,16 @@ def vote_for_candidate(voter: Voter, candidate_id: int, election_id: int):
 
 
 def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Candidate]:
-    previous_vote: Vote = Vote.objects.get(voter_id=voter.id, election_id=election_id).first()
+    try:
+        previous_vote = Vote.objects.get(voter_id=voter.id, election_id=election_id)
+    except Vote.DoesNotExist:
+        previous_vote = None
     candidate = None
     if previous_vote:
         candidate = Candidate.objects.get(id=previous_vote.candidate_id)
     return candidate
 
 
-def get_election_detail_serializer_by_location(loaction: Location):
-    pass
+def get_election_detail_serializer_by_location(voter: Voter):
+    elections = list(get_elections_by_voter(voter))
+    return ElectionFullSerializerImplementation(elections, many=True)

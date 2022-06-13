@@ -6,11 +6,10 @@ from django.db import models
 
 
 class Location(models.Model):
-    region = models.CharField(max_length=32)
     city = models.CharField(max_length=32)
 
     def __str__(self):
-        return f'{self.region} - {self.city}'
+        return f'{self.city}'
 
 
 class Voter(User):
@@ -50,12 +49,13 @@ class Candidate(models.Model):
     full_name = models.CharField(max_length=64)
     description = models.CharField(max_length=256)
     election = models.ForeignKey(Election, on_delete=models.CASCADE)
+    image_url = models.CharField(max_length=256, null=True)
 
     def __str__(self):
         return self.full_name
 
 
 class Vote(models.Model):
-    voter = models.OneToOneField(Voter, on_delete=models.CASCADE)
-    election = models.OneToOneField(Election, on_delete=models.CASCADE)
-    candidate = models.OneToOneField(Candidate, on_delete=models.CASCADE)
+    voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
+    election = models.ForeignKey(Election, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
