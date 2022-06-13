@@ -1,7 +1,6 @@
 from typing import Optional, List
 from itertools import chain
 
-from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
@@ -13,11 +12,13 @@ def get_elections_by_voter(voter: Voter):
 
 
 def get_user_from_email(email: str, password: str) -> Optional[Voter]:
-    suspect: Voter = Voter.objects.filter(email=email).first()
-    if suspect.check_password(password):
-        return suspect
+    if suspect := Voter.objects.filter(email=email).first():
+        if suspect.check_password(password):
+            return suspect
+        else:
+            raise ValidationError(detail='Password is incorrect', code=401)
     else:
-        raise ValidationError(detail='Password is incorrect', code=401)
+        raise ValidationError(detail='Voter with such email does not exist', code=404)
 
 
 def create_user_from_data(password: str, **kwargs):
