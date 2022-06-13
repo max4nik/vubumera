@@ -7,11 +7,12 @@ from drf_spectacular.utils import extend_schema
 
 from elections.api_helpers import user_dependent_call, user_election_dependent_call
 from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
-    vote_for_candidate, get_election_details_by_user, get_election_detail_serializer_by_location
-from elections.models import Voter, Location, Election, Vote
+    vote_for_candidate, get_election_details_by_user
+from elections.models import Voter, Location
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
-    VoteInputSerializer, CandidatesSerializer, ElectionFullSerializerImplementation, ElectionFullSerializer
+    VoteInputSerializer, CandidatesSerializer, \
+    StatisticSerializer
 
 
 class RegisterUserAPI(APIView):
@@ -98,7 +99,7 @@ class LocationsAPI(APIView):
         }
     )
     def get(self, request):
-        locations = Location.objects.all()
+        locations = Location.objects.all().order_by('city')
         return Response(
             LocationSerializer(locations, many=True).data,
             status=status.HTTP_200_OK
@@ -112,13 +113,11 @@ class StatisticAPI(APIView):
             401: ValidationError
         }
     )
-    @user_election_dependent_call
-    def get(self, request, voter: Voter, election: Election):
-        print(voter, election)
-        candidates = Vote.objects.filter(voter=voter, election=election)
-        list_candidates = list(candidates)
+    @user_dependent_call
+    def get(self, request, voter: Voter):
+        elections = get_elections_by_voter(voter)
         return Response(
-            LocationSerializer(locations, many=True).data,
+            StatisticSerializer(elections, many=True).data,
             status=status.HTTP_200_OK
         )
 
@@ -158,23 +157,5 @@ class ElectionsAPI(APIView):
                 election_candidate
             ).data,
             status=status.HTTP_202_ACCEPTED
-        )
-
-
-class ElectionDetailsAPI(APIView):
-
-    permission_classes = []
-
-    @extend_schema(
-        responses={
-            200: ElectionFullSerializer(many=True)
-        }
-    )
-    @user_dependent_call
-    def get(self, request, voter: Voter):
-        election_results = get_election_detail_serializer_by_location(voter)
-        return Response(
-            election_results.data,
-            status=status.HTTP_200_OK
         )
 

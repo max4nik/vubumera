@@ -2,9 +2,8 @@ from typing import List
 
 from rest_framework import serializers
 
+from elections.controllers import get_percents_by_candidate_for_election
 from elections.models import Voter, Election, Location, LocalElection, GlobalElection, Candidate
-from elections.services import get_candidate_votes_for_election
-
 
 class LoginUserInputSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -18,7 +17,6 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class RetrieveElectionsSerializer(serializers.Serializer):
-
     class Meta:
         model = Location
         fields = '__all__'
@@ -93,6 +91,18 @@ class VoteInputSerializer(serializers.Serializer):
     candidate_id = serializers.IntegerField()
 
 
+class StatisticSerializer(serializers.ModelSerializer):
+    statistic = serializers.SerializerMethodField(read_only=False)
+
+    def get_statistic(self, obj):
+        statistic = get_percents_by_candidate_for_election(obj)
+        return statistic
+
+    class Meta:
+        model = Election
+        fields = '__all__'
+
+
 class CandidateNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
@@ -114,15 +124,3 @@ class ElectionFullSerializer(serializers.ModelSerializer):
     class Meta:
         model = Election
         fields = '__all__'
-
-
-class ElectionFullSerializerImplementation(serializers.ModelSerializer):
-    vote_results = serializers.SerializerMethodField(read_only=False)
-
-    class Meta:
-        model = Election
-        fields = '__all__'
-
-    def get_vote_results(self, obj):
-        candidate_votes = get_candidate_votes_for_election(obj)
-        return candidate_votes

@@ -5,13 +5,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from elections.models import Voter, GlobalElection, LocalElection, Location, Vote, Election, Candidate
-from elections.serializers import ElectionFullSerializerImplementation
-
 
 def get_elections_by_voter(voter: Voter):
     local_elections_for_voter: LocalElection = LocalElection.objects.filter(location=voter.location)
     global_elections: GlobalElection = GlobalElection.objects.all()
-    return chain(local_elections_for_voter, global_elections)
+    return chain(global_elections, local_elections_for_voter)
 
 
 def get_user_from_email(email: str, password: str) -> Optional[Voter]:
@@ -62,6 +60,21 @@ def get_election_details_by_user(election_id: int, voter: Voter) -> Optional[Can
     return candidate
 
 
-def get_election_detail_serializer_by_location(voter: Voter):
-    elections = list(get_elections_by_voter(voter))
-    return ElectionFullSerializerImplementation(elections, many=True)
+def get_percents_by_candidate_for_election(election: Election):
+    candidates = election.candidates
+    result = [[], []]
+    for candidate in candidates:
+        result[0].append(candidate.full_name)
+        result[1].append(0)
+    votes = Vote.objects.filter(election=election)
+    candidates = votes.values_list('candidate')
+    candidates_count = len(candidates)
+    candidates = set(candidates)
+
+    for candidate in candidates:
+        votes_by_candidates = Vote.objects.filter(candidate_id=candidate[0])
+        candidate = votes_by_candidates.first().candidate
+        candidate_counter = votes_by_candidates.count()
+        index_for_second_list = result[0].index(candidate.full_name)
+        result[1][index_for_second_list] = candidate_counter / candidates_count * 100
+    return result
