@@ -15,7 +15,7 @@ def get_elections_by_voter(voter: Voter):
 
 
 def get_user_from_email(email: str, password: str) -> Optional[Voter]:
-    suspect: Voter = Voter.objects.get(email=email)
+    suspect: Voter = Voter.objects.filter(email=email).first()
     if suspect.check_password(password):
         return suspect
     else:
