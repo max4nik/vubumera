@@ -14,7 +14,7 @@ class LoginUserInputSerializer(serializers.Serializer):
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
-        fields = ['region', 'city']
+        fields = ['city']
 
 
 class RetrieveElectionsSerializer(serializers.Serializer):
@@ -93,9 +93,17 @@ class VoteInputSerializer(serializers.Serializer):
     candidate_id = serializers.IntegerField()
 
 
+class CandidateNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = [
+            'full_name'
+        ]
+
+
 class VotingResultSerializer(serializers.Serializer):
-    candidate = CandidatesSerializer(many=False)
-    vote_count = serializers.IntegerField()
+    candidate_names = CandidateNameSerializer(many=True)
+    vote_count = serializers.ListField(child=serializers.IntegerField())
 
 
 class ElectionFullSerializer(serializers.ModelSerializer):
@@ -117,5 +125,4 @@ class ElectionFullSerializerImplementation(serializers.ModelSerializer):
 
     def get_vote_results(self, obj):
         candidate_votes = get_candidate_votes_for_election(obj)
-        serialized = VotingResultSerializer(candidate_votes, many=True).data
-        return serialized
+        return candidate_votes

@@ -6,11 +6,10 @@ from django.db import models
 
 
 class Location(models.Model):
-    region = models.CharField(max_length=32)
     city = models.CharField(max_length=32)
 
     def __str__(self):
-        return f'{self.region} - {self.city}'
+        return f'{self.city}'
 
 
 class Voter(User):
