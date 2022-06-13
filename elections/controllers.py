@@ -79,8 +79,6 @@ def get_percents_by_candidate_for_election(election: Election):
         result[0].append(candidate.full_name)
         result[1].append(0)
     votes = Vote.objects.filter(election=election)
-    candidates = votes.values_list('candidate')
-    candidates_count = len(candidates)
     vote_count = votes.count()
 
     for vote in votes:
