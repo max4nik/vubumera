@@ -2,7 +2,7 @@ from typing import List
 
 from rest_framework import serializers
 
-from elections.controllers import get_percents_by_candidate_for_election
+from elections.controllers import ElectionController
 from elections.models import Voter, Election, Location, LocalElection, GlobalElection, Candidate
 
 
@@ -96,7 +96,8 @@ class StatisticSerializer(serializers.ModelSerializer):
     statistic = serializers.SerializerMethodField(read_only=False)
 
     def get_statistic(self, obj):
-        statistic = get_percents_by_candidate_for_election(obj)
+        controller = ElectionController(obj)
+        statistic = controller.get_percents_by_candidate_for_election()
         return statistic
 
     class Meta:
