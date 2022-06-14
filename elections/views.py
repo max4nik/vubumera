@@ -5,8 +5,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from elections.api_helpers import user_dependent_call, user_election_dependent_call, election_dependent_call
-from elections.controllers import get_user_from_email, create_user_from_data, get_elections_by_voter, \
-    vote_for_candidate, get_election_details_by_user, unvote_in_election
+from elections.controllers import VoterController, ElectionController
 from elections.models import Voter, Location, Election
 from elections.serializers import LoginUserInputSerializer, VoterSerializer, MessageSerializer, UserIDSerializer, \
     VoterRegistrationSerializer, ElectionSerializer, RetrieveElectionsSerializer, LocationSerializer, \
@@ -31,7 +30,8 @@ class RegisterUserAPI(APIView):
     def post(self, request):
         voter_data = VoterRegistrationSerializer(data=request.data)
         voter_data.is_valid(raise_exception=True)
-        user_id = create_user_from_data(**voter_data.validated_data)
+        controller = VoterController()
+        user_id = controller.create_user_from_data(**voter_data.validated_data)
 
         user_id_data = UserIDSerializer(data={
             'user_id': user_id
@@ -60,7 +60,8 @@ class LoginUserAPI(APIView):
     def post(self, request):
         request_data = LoginUserInputSerializer(data=request.data)
         request_data.is_valid(raise_exception=True)
-        user = get_user_from_email(**request_data.validated_data)
+        controller = VoterController()
+        user = controller.get_user_from_email(**request_data.validated_data)
         return Response(
             VoterSerializer(user).data,
             status=status.HTTP_200_OK
@@ -83,7 +84,8 @@ class RetrieveElectionsAPI(APIView):
     )
     @user_dependent_call
     def get(self, request, voter: Voter):
-        elections = get_elections_by_voter(voter)
+        controller = VoterController(voter)
+        elections = controller.get_elections_by_voter()
         return Response(
             [ElectionSerializer.to_representation(election).data for election in elections],
             status=status.HTTP_200_OK
@@ -106,7 +108,6 @@ class GetElection(APIView):
     )
     @election_dependent_call
     def get(self, request, election: Election):
-        print(election)
         return Response(
             ElectionSerializer.to_representation(election).data,
             status=status.HTTP_200_OK
@@ -137,7 +138,8 @@ class StatisticAPI(APIView):
     )
     @user_dependent_call
     def get(self, request, voter: Voter):
-        elections = get_elections_by_voter(voter)
+        controller = VoterController()
+        elections = controller.get_elections_by_voter()
         return Response(
             StatisticSerializer(elections, many=True).data,
             status=status.HTTP_200_OK
@@ -158,7 +160,8 @@ class VotingAPI(APIView):
     def post(self, request, voter: Voter):
         voting_data = VoteInputSerializer(data=request.data)
         voting_data.is_valid(raise_exception=True)
-        vote_for_candidate(voter, **voting_data.validated_data)
+        controller = VoterController(voter)
+        controller.vote_for_candidate(**voting_data.validated_data)
         return Response(data={}, status=status.HTTP_200_OK)
 
 
@@ -173,7 +176,8 @@ class UnvoteAPI(APIView):
     )
     @user_election_dependent_call
     def delete(self, request, voter: Voter, election: Election):
-        unvote_in_election(voter, election)
+        controller = VoterController(voter)
+        controller.unvote_in_election(election)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -187,7 +191,8 @@ class ElectionsAPI(APIView):
     )
     @user_dependent_call
     def get(self, request, voter: Voter, election_id: int):
-        election_candidate = get_election_details_by_user(election_id, voter)
+        controller = VoterController(voter)
+        election_candidate = controller.get_election_details_by_user(election_id)
         return Response(
             data={} if not election_candidate
             else CandidatesSerializer(
